@@ -1,5 +1,6 @@
 package org.example.voucher.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.voucher.dto.ResponseDto;
 import org.example.voucher.dto.VoucherRequestDto;
 import org.example.voucher.service.VoucherService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.concurrent.CompletionStage;
 
 @RestController
+@Slf4j
 public class VoucherController {
 
     private VoucherService voucherService;
@@ -24,6 +26,7 @@ public class VoucherController {
 
     @PostMapping(value = "/get-voucher", produces = MediaType.APPLICATION_JSON_VALUE)
     public CompletionStage<ResponseDto> getVoucher(@RequestBody VoucherRequestDto requestDto) {
+        log.info("Get voucher request received: {}", requestDto.toString());
         return voucherService.acquireVoucher(requestDto);
     }
 }

@@ -1,0 +1,4 @@
+server:
+  port: 7788
+  servlet:
+    context-path: /third-party
