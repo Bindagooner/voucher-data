@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: voucher-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/voucher_data?autoReconnect=true&useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+    username: root
+    password: P@ssw0rd
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+
+server:
+  port: 7777
+  servlet:
+    context-path: /voucher-service
+
+resilience4j.timelimiter:
+  instances:
+    3rdService:
+      timeoutDuration: 3s
+      cancelRunningFuture: false
+---
+#rating:
+#  service:
+#    endpoint: http://localhost:7070/ratings/
