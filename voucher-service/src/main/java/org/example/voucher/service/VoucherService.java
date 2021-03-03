@@ -2,17 +2,19 @@ package org.example.voucher.service;
 
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.example.voucher.dto.OrderStatus;
-import org.example.voucher.dto.ResponseDto;
-import org.example.voucher.dto.VoucherDto;
-import org.example.voucher.dto.VoucherRequestDto;
+import okhttp3.RequestBody;
+import org.example.voucher.dto.*;
 import org.example.voucher.entity.Order;
 import org.example.voucher.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
@@ -53,15 +55,17 @@ public class VoucherService {
         Supplier<ResponseDto> supplier = () -> {
             log.info("Requesting voucher from 3rd party - orderId: {}, phoneNumber: {}",
                     requestDto.getOrderId(), requestDto.getPhoneNo());
-            Request request = new Request.Builder()
-                    .url(EXTERNAL_URL)
-                    .addHeader("Authorization", "Basic something")
-                    .post()
-                    .build();
 
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<ThirdPartyRequestDto> request = new HttpEntity<>(
+                    new ThirdPartyRequestDto(requestDto.getOrderId(), requestDto.getPhoneNo()));
+            ThirdPartyResponseDto resp = restTemplate.postForObject(EXTERNAL_URL, request, ThirdPartyResponseDto.class);
 
+            log.info("Third party responded");
+            Optional<Order> byOrderId = orderRepository.findByOrderId(requestDto.getOrderId());
+            if (byOrderId.isPresent())
 
-            return VoucherDto.builder().message("voucher_code_aaa").build();
+            return VoucherDto.builder().message(resp.getVoucherCode()).build();
         };
         return CompletableFuture.supplyAsync(supplier);
     }
