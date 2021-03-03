@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class RequestDto {
-    private String itemId;
+    private String requestId;
     private String voucherType;
 }

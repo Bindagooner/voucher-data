@@ -2,6 +2,8 @@ package org.example.voucher.service;
 
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.example.voucher.dto.OrderStatus;
 import org.example.voucher.dto.ResponseDto;
 import org.example.voucher.dto.VoucherDto;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
@@ -21,10 +24,17 @@ import java.util.function.Supplier;
 public class VoucherService {
 
     private OrderRepository orderRepository;
+    private OkHttpClient client;
+    private static final String EXTERNAL_URL = "http://localhost:7788/get-voucher";
 
     @Autowired
     public VoucherService(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
+        client = new OkHttpClient.Builder()
+                .connectTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .build();
     }
 
     /**
@@ -43,23 +53,35 @@ public class VoucherService {
         Supplier<ResponseDto> supplier = () -> {
             log.info("Requesting voucher from 3rd party - orderId: {}, phoneNumber: {}",
                     requestDto.getOrderId(), requestDto.getPhoneNo());
+            Request request = new Request.Builder()
+                    .url(EXTERNAL_URL)
+                    .addHeader("Authorization", "Basic something")
+                    .post()
+                    .build();
 
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            throw new RuntimeException("3rd exception");
-//            return VoucherDto.builder().message("voucher_code_aaa").build();
+
+
+            return VoucherDto.builder().message("voucher_code_aaa").build();
         };
         return CompletableFuture.supplyAsync(supplier);
     }
 
-    private CompletionStage<String> handleFallback(VoucherRequestDto requestDto, Throwable throwable) {
+    private CompletionStage<ResponseDto> handleFallback(VoucherRequestDto requestDto, Throwable throwable) {
         log.info("fallback is being called...");
         if (throwable instanceof TimeoutException) {
 
+            orderRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
+                    requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUESTING));
+            return CompletableFuture.supplyAsync(() ->
+                    ResponseDto.builder().message("The request is being processed within 30 seconds.")
+                            .statusCode(202).build());
+        } else {
+            orderRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
+                    requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUEST_FAILED));
+            return CompletableFuture.supplyAsync(() ->
+                    ResponseDto.builder().message("Something went wrong")
+                            .statusCode(500).build());
         }
-        return CompletableFuture.supplyAsync(() -> "Message error");
+
     }
 }
