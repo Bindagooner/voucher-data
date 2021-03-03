@@ -2,7 +2,6 @@ package org.example.voucher.entity;
 
 import lombok.Data;
 import org.example.voucher.dto.OrderStatus;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 
@@ -11,6 +10,7 @@ import javax.persistence.*;
 @Data
 public class Order extends Audit {
 
+    @Id
     @Column(name = "order_id", unique = true, nullable = false)
     private String orderId;
 

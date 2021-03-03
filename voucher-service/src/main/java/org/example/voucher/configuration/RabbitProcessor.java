@@ -7,6 +7,8 @@ import org.springframework.messaging.SubscribableChannel;
 
 public interface RabbitProcessor {
 
+    String INPUT = "myInput";
+
     @Output("myOutput")
     MessageChannel output();
 
