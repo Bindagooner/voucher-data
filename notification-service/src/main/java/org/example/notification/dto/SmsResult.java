@@ -1,4 +1,4 @@
-package org.example.voucher.dto;
+package org.example.notification.dto;
 
 import lombok.Builder;
 import lombok.Data;

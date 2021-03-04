@@ -9,8 +9,8 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Builder
-public class SmsVoucherMessage {
-    private String orderId;
+public class SmsMessageRequest {
+    private String messageId;
     private String phoneNumber;
-    private String voucherCode;
+    private String content;
 }

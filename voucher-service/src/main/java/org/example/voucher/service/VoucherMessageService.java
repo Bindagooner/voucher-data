@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.voucher.configuration.RabbitProcessor;
 import org.example.voucher.dto.OrderStatus;
 import org.example.voucher.dto.SmsResult;
-import org.example.voucher.dto.SmsVoucherMessage;
+import org.example.voucher.dto.SmsMessageRequest;
 import org.example.voucher.entity.Order;
 import org.example.voucher.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +27,15 @@ public class VoucherMessageService {
         this.orderRepository = orderRepository;
     }
 
-    public void sendSMSMessage(SmsVoucherMessage message) {
+    public void sendSMSMessage(SmsMessageRequest message) {
         log.info("Send message to channel: {}", message.toString());
         processor.output().send(MessageBuilder.withPayload(message).build());
     }
 
     @StreamListener(RabbitProcessor.INPUT)
     public void listenSMSResult(SmsResult result) {
-        log.info("A Message received: ");
-        Optional<Order> byOrderId = orderRepository.findByOrderId(result.getOrderId());
+        log.info("A Message received: {}", result.toString());
+        Optional<Order> byOrderId = orderRepository.findByOrderId(result.getMessageId());
         if (byOrderId.isPresent()) {
             Order order = byOrderId.get();
             order.setOrderStatus(result.getIsSuccess() ? OrderStatus.COMPLETED : OrderStatus.SENDING_FAILED);

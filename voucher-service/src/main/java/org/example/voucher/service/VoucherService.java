@@ -8,8 +8,12 @@ import org.example.voucher.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -22,7 +26,7 @@ public class VoucherService {
 
     private OrderRepository orderRepository;
     private VoucherMessageService voucherMessageService;
-    private static final String EXTERNAL_URL = "http://localhost:7788/get-voucher";
+    private static final String EXTERNAL_URL = "http://localhost:7788/third-party/get-voucher";
 
     @Autowired
     public VoucherService(OrderRepository orderRepository, VoucherMessageService voucherMessageService) {
@@ -48,20 +52,25 @@ public class VoucherService {
                     requestDto.getOrderId(), requestDto.getPhoneNo());
 
             RestTemplate restTemplate = new RestTemplate();
+            MultiValueMap<String, String> headers = buildHeader();
+
             HttpEntity<ThirdPartyRequestDto> request = new HttpEntity<>(
-                    new ThirdPartyRequestDto(requestDto.getOrderId(), requestDto.getPhoneNo()));
-            ThirdPartyResponseDto resp = restTemplate.postForObject(EXTERNAL_URL, request, ThirdPartyResponseDto.class);
-
-            log.info("Third party responded");
-
-            String voucherCode = resp.getVoucherCode();
+                    new ThirdPartyRequestDto(requestDto.getOrderId(), requestDto.getPhoneNo()), headers);
+//            ThirdPartyResponseDto resp = restTemplate.postForObject(EXTERNAL_URL, request, ThirdPartyResponseDto.class);
+            try {
+                Thread.sleep(10*1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            String voucherCode = "resp.getVoucherCode()";
+            log.info("Third party responded - {}", voucherCode);
             Optional<Order> byOrderId = orderRepository.findByOrderId(requestDto.getOrderId());
             if (byOrderId.isPresent()) {
                 Order order1 = byOrderId.get();
                 order1.setVoucherCode(voucherCode);
                 if (order1.getOrderStatus().equals(OrderStatus.VOUCHER_REQUESTING)) {
-                    voucherMessageService.sendSMSMessage(SmsVoucherMessage.builder()
-                            .voucherCode(voucherCode).orderId(requestDto.getOrderId())
+                    voucherMessageService.sendSMSMessage(SmsMessageRequest.builder()
+                            .content("Voucher code: " + voucherCode).messageId(requestDto.getOrderId())
                             .phoneNumber(requestDto.getPhoneNo())
                             .build());
                 } else {
@@ -75,8 +84,16 @@ public class VoucherService {
         return CompletableFuture.supplyAsync(supplier);
     }
 
+    private MultiValueMap<String, String> buildHeader() {
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
+        headers.add("Content-Type", "application/json");
+        headers.add("Authorization", "Basic aaaaa");
+        return headers;
+    }
+
     private CompletionStage<ResponseDto> handleFallback(VoucherRequestDto requestDto, Throwable throwable) {
         log.info("fallback is being called...");
+        log.error("Error: ", throwable);
         if (throwable instanceof TimeoutException) {
             orderRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
                     requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUESTING));

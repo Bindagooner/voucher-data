@@ -1,25 +1,14 @@
 spring:
   application:
-    name: voucher-service
-  datasource:
-    url: jdbc:mysql://localhost:3306/voucher_data?autoReconnect=true&useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
-    username: root
-    password: P@ssw0rd
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-    show-sql: false
+    name: notification-service
   cloud:
       stream:
         bindings:
-          notificationReplyChannel:
-            destination: notification.resp
-            binder: local_rabbit
           notificationChannel:
             destination: notification.req
+            binder: local_rabbit
+          notificationReplyChannel:
+            destination: notification.resp
             binder: local_rabbit
         binders:
           local_rabbit:
@@ -35,9 +24,9 @@ spring:
 
 
 server:
-  port: 7777
+  port: 7799
   servlet:
-    context-path: /voucher-service
+    context-path: /notification-service
 
 eureka:
   client:
@@ -47,9 +36,3 @@ eureka:
   server:
     host: localhost
     port: 8761
-
-resilience4j.timelimiter:
-  instances:
-    3rdService:
-      timeoutDuration: 6s
-      cancelRunningFuture: false

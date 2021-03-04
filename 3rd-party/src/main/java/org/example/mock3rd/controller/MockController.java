@@ -1,5 +1,6 @@
 package org.example.mock3rd.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.mock3rd.dto.RequestDto;
 import org.example.mock3rd.dto.ResponseDto;
 import org.springframework.http.MediaType;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Random;
 
 @RestController
+@Slf4j
 public class MockController {
 
     Random random = new Random();
@@ -24,8 +26,8 @@ public class MockController {
             throws InterruptedException {
 
         int wait = random.nextInt(120 - 3 + 1) + 3;
+        log.info("sleeping in {} seconds", wait);
         Thread.sleep(wait * 1000);
-
         return ResponseEntity.ok(new ResponseDto("test-voucher-" + wait, requestDto.getRequestId()));
     }
 }
