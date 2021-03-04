@@ -56,13 +56,9 @@ public class VoucherService {
 
             HttpEntity<ThirdPartyRequestDto> request = new HttpEntity<>(
                     new ThirdPartyRequestDto(requestDto.getOrderId(), requestDto.getPhoneNo()), headers);
-//            ThirdPartyResponseDto resp = restTemplate.postForObject(EXTERNAL_URL, request, ThirdPartyResponseDto.class);
-            try {
-                Thread.sleep(10*1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            String voucherCode = "resp.getVoucherCode()";
+            ThirdPartyResponseDto resp = restTemplate.postForObject(EXTERNAL_URL, request, ThirdPartyResponseDto.class);
+
+            String voucherCode = resp.getVoucherCode();
             log.info("Third party responded - {}", voucherCode);
             Optional<Order> byOrderId = orderRepository.findByOrderId(requestDto.getOrderId());
             if (byOrderId.isPresent()) {
@@ -91,7 +87,7 @@ public class VoucherService {
         return headers;
     }
 
-    private CompletionStage<ResponseDto> handleFallback(VoucherRequestDto requestDto, Throwable throwable) {
+    private CompletionStage<ResponseDto> handleFallback(VoucherRequestDto requestDto, Throwable throwable) throws Throwable {
         log.info("fallback is being called...");
         log.error("Error: ", throwable);
         if (throwable instanceof TimeoutException) {
@@ -103,9 +99,7 @@ public class VoucherService {
         } else {
             orderRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
                     requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUEST_FAILED));
-            return CompletableFuture.supplyAsync(() ->
-                    ResponseDto.builder().message("Service is not available.")
-                            .statusCode(503).build());
+            throw throwable;
         }
 
     }
