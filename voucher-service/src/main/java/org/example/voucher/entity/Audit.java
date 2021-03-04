@@ -9,7 +9,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.Column;
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @ToString
@@ -19,10 +19,10 @@ public class Audit {
 
     @Column(name = "created_date")
     @CreationTimestamp
-    private LocalDateTime createdDate;
+    private Date createdDate;
 
     @Column(name = "updated_date")
     @UpdateTimestamp
-    private LocalDateTime updatedDate;
+    private Date updatedDate;
 
 }

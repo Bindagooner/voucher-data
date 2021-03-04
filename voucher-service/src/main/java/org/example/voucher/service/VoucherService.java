@@ -7,11 +7,15 @@ import org.example.voucher.entity.Order;
 import org.example.voucher.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -40,14 +44,14 @@ public class VoucherService {
      * @return
      */
     @TimeLimiter(name = "3rdService", fallbackMethod = "handleFallback")
-    public CompletionStage<ResponseDto> acquireVoucher(VoucherRequestDto requestDto) {
+    public CompletionStage<ResponseEntity<ResponseDto>> acquireVoucher(VoucherRequestDto requestDto) {
         Order order = new Order();
         order.setOrderId(requestDto.getOrderId());
         order.setPhoneNumber(requestDto.getPhoneNo());
         order.setOrderStatus(OrderStatus.PAYMENT_SUCCESS);
         orderRepository.saveAndFlush(order);
 
-        Supplier<ResponseDto> supplier = () -> {
+        Supplier<ResponseEntity<ResponseDto>> supplier = () -> {
             log.info("Requesting voucher from 3rd party - orderId: {}, phoneNumber: {}",
                     requestDto.getOrderId(), requestDto.getPhoneNo());
 
@@ -75,7 +79,7 @@ public class VoucherService {
                 orderRepository.save(order1);
             }
 
-            return VoucherDto.builder().message(voucherCode).build();
+            return ResponseEntity.ok(VoucherDto.builder().message(voucherCode).build());
         };
         return CompletableFuture.supplyAsync(supplier);
     }
@@ -87,19 +91,19 @@ public class VoucherService {
         return headers;
     }
 
-    private CompletionStage<ResponseDto> handleFallback(VoucherRequestDto requestDto, Throwable throwable) throws Throwable {
+    private CompletionStage<ResponseEntity<ResponseDto>> handleFallback(VoucherRequestDto requestDto, Throwable throwable) {
         log.info("fallback is being called...");
-        log.error("Error: ", throwable);
         if (throwable instanceof TimeoutException) {
             orderRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
                     requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUESTING));
             return CompletableFuture.supplyAsync(() ->
-                    ResponseDto.builder().message("The request is being processed within 30 seconds.")
-                            .statusCode(202).build());
+                    ResponseEntity.accepted().body(
+                            ResponseDto.builder().message("The request is being processed within 30 seconds.")
+                                    .statusCode(202).build()));
         } else {
             orderRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
                     requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUEST_FAILED));
-            throw throwable;
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Something went wrong. Please retry later.", throwable);
         }
 
     }

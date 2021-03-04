@@ -38,6 +38,8 @@ server:
   port: 7777
   servlet:
     context-path: /voucher-service
+  error:
+    include-message: ALWAYS
 
 eureka:
   client:

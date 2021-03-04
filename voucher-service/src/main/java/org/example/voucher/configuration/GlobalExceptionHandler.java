@@ -15,10 +15,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         super();
     }
 
-    @ExceptionHandler({RuntimeException.class})
-    public ResponseEntity<Object> handleRuntimeException(final RuntimeException ex, final WebRequest request) {
-        final String bodyOfResponse = "Service unavailable";
-        return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.SERVICE_UNAVAILABLE, request);
-    }
+//    @ExceptionHandler({RuntimeException.class})
+//    public ResponseEntity<Object> handleRuntimeException(final RuntimeException ex, final WebRequest request) {
+//        final String bodyOfResponse = "Service unavailable";
+//        return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.SERVICE_UNAVAILABLE, request);
+//    }
 
 }
