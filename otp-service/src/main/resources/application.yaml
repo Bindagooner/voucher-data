@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: otp-service
+  cloud:
+    stream:
+      bindings:
+        notificationChannel:
+          destination: notification.req
+          binder: local_rabbit
+        notificationReplyChannel:
+          destination: notification.resp
+          binder: local_rabbit
+      binders:
+        local_rabbit:
+          type: rabbit
+          environment:
+            spring:
+              rabbitmq:
+                host: localhost
+                port: 5672
+                username: guest
+                password: guest
+                virtual-host: /
+
+
+server:
+  port: 7700
+  servlet:
+    context-path: /otp-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka.server.host}:${eureka.server.port}/discovery/eureka
+    fetch-registry: true
+  server:
+    host: localhost
+    port: 8761

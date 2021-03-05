@@ -1,13 +1,11 @@
 package org.example.notification.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.common.dto.dto.SmsMessageRequest;
+import org.example.common.dto.dto.SmsResult;
 import org.example.notification.configuration.RabbitProcessor;
-import org.example.notification.dto.SmsResult;
-import org.example.notification.dto.SmsMessageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.StreamListener;
-import org.springframework.cloud.stream.messaging.Processor;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 

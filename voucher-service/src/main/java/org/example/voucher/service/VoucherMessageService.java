@@ -1,10 +1,10 @@
 package org.example.voucher.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.common.dto.dto.SmsMessageRequest;
+import org.example.common.dto.dto.SmsResult;
 import org.example.voucher.configuration.RabbitProcessor;
 import org.example.voucher.dto.OrderStatus;
-import org.example.voucher.dto.SmsResult;
-import org.example.voucher.dto.SmsMessageRequest;
 import org.example.voucher.entity.Order;
 import org.example.voucher.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +35,7 @@ public class VoucherMessageService {
     @StreamListener(RabbitProcessor.INPUT)
     public void listenSMSResult(SmsResult result) {
         log.info("A Message received: {}", result.toString());
+        if (!result.getMessageType().equals("VOUCHER")) return;
         Optional<Order> byOrderId = orderRepository.findByOrderId(result.getMessageId());
         if (byOrderId.isPresent()) {
             Order order = byOrderId.get();

@@ -1,4 +1,4 @@
-package org.example.voucher.dto;
+package org.example.common.dto.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +8,7 @@ import lombok.ToString;
 @Builder
 @ToString
 public class SmsResult {
-
+    private String messageType;
     private String messageId;
     private Boolean isSuccess;
 }

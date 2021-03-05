@@ -1,4 +1,4 @@
-package org.example.voucher.dto;
+package org.example.common.dto.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +10,7 @@ import lombok.ToString;
 @ToString
 @Builder
 public class SmsMessageRequest {
+    private String messageType;
     private String messageId;
     private String phoneNumber;
     private String content;

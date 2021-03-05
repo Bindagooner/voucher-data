@@ -13,6 +13,8 @@
         <module>discovery-service</module>
         <module>config-service</module>
         <module>3rd-party</module>
+        <module>otp-service</module>
+        <module>common</module>
     </modules>
     <packaging>pom</packaging>
 
