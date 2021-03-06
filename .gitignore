@@ -12,3 +12,8 @@
 .idea
 */.idea
 *.iml
+
+.mvn
+*/.mvn
+*/mvnw*
+

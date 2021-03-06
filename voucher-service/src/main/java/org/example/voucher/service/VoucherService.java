@@ -2,7 +2,10 @@ package org.example.voucher.service;
 
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.extern.slf4j.Slf4j;
-import org.example.common.dto.dto.SmsMessageRequest;
+import org.apache.commons.lang.StringUtils;
+import org.example.common.dto.MessageType;
+import org.example.common.dto.NotificationChannel;
+import org.example.common.dto.SendingMessageRequest;
 import org.example.voucher.dto.*;
 import org.example.voucher.entity.Order;
 import org.example.voucher.repository.OrderRepository;
@@ -11,14 +14,11 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -43,7 +43,7 @@ public class VoucherService {
 
     public List<String> getPurchasedVoucher(String phoneNumber) {
         List<Order> orders = orderRepository.findByPhoneNumber(phoneNumber);
-        return orders.stream().map(Order::getVoucherCode).collect(Collectors.toList());
+        return orders.stream().map(Order::getVoucherCode).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
     }
 
     /**
@@ -77,9 +77,10 @@ public class VoucherService {
                 Order order1 = byOrderId.get();
                 order1.setVoucherCode(voucherCode);
                 if (order1.getOrderStatus().equals(OrderStatus.VOUCHER_REQUESTING)) {
-                    voucherMessageService.sendSMSMessage(SmsMessageRequest.builder()
+                    voucherMessageService.sendSMSMessage(SendingMessageRequest.builder()
                             .content("Voucher code: " + voucherCode).messageId(requestDto.getOrderId())
-                            .phoneNumber(requestDto.getPhoneNo()).messageType("VOUCHER")
+                            .phoneNumber(requestDto.getPhoneNo()).messageType(MessageType.SMS_VOUCHER)
+                            .channel(NotificationChannel.SMS)
                             .build());
                 } else {
                     order1.setOrderStatus(OrderStatus.COMPLETED);

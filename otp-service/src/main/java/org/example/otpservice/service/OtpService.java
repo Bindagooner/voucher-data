@@ -1,10 +1,8 @@
 package org.example.otpservice.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.common.dto.dto.OtpValidation;
+import org.example.common.dto.*;
 import org.example.otpservice.RabbitProcessor;
-import org.example.common.dto.dto.OtpRequest;
-import org.example.common.dto.dto.SmsMessageRequest;
 import org.example.otpservice.entity.OtpEntity;
 import org.example.otpservice.repository.OtpRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,16 +37,19 @@ public class OtpService {
         entity.setPhoneNumber(otpRequest.getPhoneNumber());
         entity.setRequester(otpRequest.getRequester());
         entity.setValidated(false);
-        entity.setReferenceNumber("randomString");
+        entity.setReferenceNumber("randomString" + System.currentTimeMillis());
         entity.setCode("123456");
         entity.setExpiredTime(System.currentTimeMillis() + 5 * 60 * 1000); // + 5mins
         return entity;
     }
 
     protected void sendOtp(OtpEntity entity) {
-        SmsMessageRequest smsMessage = SmsMessageRequest.builder().messageId("otp-" + entity.getReferenceNumber())
-                .content("OTP: " + entity.getCode()).phoneNumber(entity.getPhoneNumber()).build();
-        log.info("send event smsMessage");
+        SendingMessageRequest smsMessage = SendingMessageRequest.builder().messageId("otp-" + entity.getReferenceNumber())
+                .content("OTP: " + entity.getCode()).phoneNumber(entity.getPhoneNumber())
+                .messageType(MessageType.SMS_OTP)
+                .channel(NotificationChannel.SMS)
+                .build();
+        log.info("sending event smsMessage");
         rabbitProcessor.output().send(MessageBuilder.withPayload(smsMessage).build());
     }
 

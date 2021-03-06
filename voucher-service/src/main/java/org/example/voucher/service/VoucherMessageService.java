@@ -1,8 +1,9 @@
 package org.example.voucher.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.common.dto.dto.SmsMessageRequest;
-import org.example.common.dto.dto.SmsResult;
+import org.example.common.dto.MessageType;
+import org.example.common.dto.SendingMessageRequest;
+import org.example.common.dto.SmsResult;
 import org.example.voucher.configuration.RabbitProcessor;
 import org.example.voucher.dto.OrderStatus;
 import org.example.voucher.entity.Order;
@@ -27,7 +28,7 @@ public class VoucherMessageService {
         this.orderRepository = orderRepository;
     }
 
-    public void sendSMSMessage(SmsMessageRequest message) {
+    public void sendSMSMessage(SendingMessageRequest message) {
         log.info("Send message to channel: {}", message.toString());
         processor.output().send(MessageBuilder.withPayload(message).build());
     }
@@ -35,7 +36,7 @@ public class VoucherMessageService {
     @StreamListener(RabbitProcessor.INPUT)
     public void listenSMSResult(SmsResult result) {
         log.info("A Message received: {}", result.toString());
-        if (!result.getMessageType().equals("VOUCHER")) return;
+        if (!result.getMessageType().equals(MessageType.SMS_VOUCHER)) return;
         Optional<Order> byOrderId = orderRepository.findByOrderId(result.getMessageId());
         if (byOrderId.isPresent()) {
             Order order = byOrderId.get();

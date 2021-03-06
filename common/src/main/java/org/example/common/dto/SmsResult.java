@@ -1,4 +1,4 @@
-package org.example.common.dto.dto;
+package org.example.common.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +8,8 @@ import lombok.ToString;
 @Builder
 @ToString
 public class SmsResult {
-    private String messageType;
+    private NotificationChannel channel;
+    private MessageType messageType;
     private String messageId;
     private Boolean isSuccess;
 }

@@ -38,17 +38,20 @@ server:
   port: 7777
   servlet:
     context-path: /voucher-service
-  error:
-    include-message: ALWAYS
 
 eureka:
   client:
     service-url:
       defaultZone: http://${eureka.server.host}:${eureka.server.port}/discovery/eureka
     fetch-registry: true
+    enabled: true
   server:
     host: localhost
     port: 8761
+  instance:
+    appname: ${spring.application.name}
+    prefer-ip-address: true
+
 
 resilience4j.timelimiter:
   instances:

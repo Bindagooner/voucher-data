@@ -1,4 +1,4 @@
-package org.example.common.dto.dto;
+package org.example.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,9 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Builder
-public class SmsMessageRequest {
-    private String messageType;
+public class SendingMessageRequest {
+    private NotificationChannel channel;
+    private MessageType messageType;
     private String messageId;
     private String phoneNumber;
     private String content;

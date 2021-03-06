@@ -13,6 +13,6 @@ public interface RabbitProcessor {
     @Output(OUTPUT)
     MessageChannel output();
 
-    @Input(INPUT)
-    SubscribableChannel myInput();
+//    @Input(INPUT)
+//    SubscribableChannel myInput();
 }

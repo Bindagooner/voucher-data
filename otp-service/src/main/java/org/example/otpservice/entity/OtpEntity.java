@@ -1,6 +1,8 @@
 package org.example.otpservice.entity;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -8,6 +10,7 @@ import java.util.Date;
 @Table(name = "otp")
 @Entity
 @Data
+@EntityListeners(AuditingEntityListener.class)
 public class OtpEntity {
 
     @Id
@@ -35,5 +38,6 @@ public class OtpEntity {
     private long expiredTime;
 
     @Column(name = "created_date")
+    @CreatedDate
     private Date createdDate;
 }

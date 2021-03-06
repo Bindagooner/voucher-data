@@ -1,4 +1,4 @@
-package org.example.common.dto.dto;
+package org.example.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,5 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class OtpValidationResponse {
+    private String refNo;
     private boolean isValid;
 }

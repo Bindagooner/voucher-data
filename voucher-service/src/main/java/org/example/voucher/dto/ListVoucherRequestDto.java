@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.example.common.dto.dto.OtpValidation;
+import org.example.common.dto.OtpValidation;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -16,6 +16,6 @@ import javax.validation.constraints.NotNull;
 public class ListVoucherRequestDto {
     @NotBlank
     @NotNull
-    private String phoneNumber;
+    private String phoneNo;
     private OtpValidation otp;
 }

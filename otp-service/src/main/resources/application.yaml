@@ -1,15 +1,26 @@
 spring:
   application:
     name: otp-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/otp_db?autoReconnect=true&useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+    username: root
+    password: P@ssw0rd
+    jpa:
+      hibernate:
+        ddl-auto: update
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.MySQL8Dialect
+      show-sql: false
   cloud:
     stream:
       bindings:
         notificationChannel:
           destination: notification.req
           binder: local_rabbit
-        notificationReplyChannel:
-          destination: notification.resp
-          binder: local_rabbit
+#        notificationReplyChannel:
+#          destination: notification.resp
+#          binder: local_rabbit
       binders:
         local_rabbit:
           type: rabbit
@@ -21,6 +32,9 @@ spring:
                 username: guest
                 password: guest
                 virtual-host: /
+  jpa:
+    hibernate:
+      ddl-auto: update
 
 
 server:
@@ -33,6 +47,14 @@ eureka:
     service-url:
       defaultZone: http://${eureka.server.host}:${eureka.server.port}/discovery/eureka
     fetch-registry: true
+    enabled: true
   server:
     host: localhost
     port: 8761
+  instance:
+    appname: ${spring.application.name}
+    prefer-ip-address: true
+
+ribbon:
+  eureka:
+    enabled: true

@@ -11,6 +11,7 @@ import org.springframework.cloud.stream.annotation.EnableBinding;
 @EnableDiscoveryClient
 @EnableBinding(RabbitProcessor.class)
 @EnableFeignClients
+@EnableEurekaClient
 public class OtpServiceApplication {
 
     public static void main(String[] args) {
