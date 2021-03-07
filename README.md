@@ -60,8 +60,8 @@ Method factory
 -	Install docker engine in local, to ease to install RabbitMQ, MySQL server.
 -	Install MySQL: Please refer: https://dev.mysql.com/doc/mysql-installation-excerpt/8.0/en/docker-mysql-getting-started.html
 -	Install RabbitMQ:
-     docker run -d --hostname my-rabbit --name rabbit-local -p 5671-5672:5671-5672 -p 15671-15672:15671-15672 -p 25672:25672 -p 4369:4369 rabbitmq:3-management
--	Build all projects in shop-online folder: mvn clean install
+> docker run -d --hostname my-rabbit --name rabbit-local -p 5671-5672:5671-5672 -p 15671-15672:15671-15672 -p 25672:25672 -p 4369:4369 rabbitmq:3-management
+-	Build all projects in voucher-data folder: mvn clean install
 -	For each jar file built inside target, run below command to start service, example:
 
 > nohup java -jar discovery-service.jar &
@@ -90,3 +90,8 @@ http://localhost:7777/voucher-service/list-voucher
 --request POST \
 --data '{"phoneNo":"012345689", "otp": {"code":"otp_received", "refNo": "ref_no_returned_by_initial_api"}}' \
 http://localhost:7777/voucher-service/list-voucher
+
+## Remaining Task Lists
+- [ ] API gateway
+- [ ] Config service
+- [ ] Unit test coverage
