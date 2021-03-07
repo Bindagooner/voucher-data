@@ -7,7 +7,7 @@ import org.example.common.dto.MessageType;
 import org.example.common.dto.NotificationChannel;
 import org.example.common.dto.SendingMessageRequest;
 import org.example.voucher.dto.*;
-import org.example.voucher.entity.Order;
+import org.example.voucher.entity.Voucher;
 import org.example.voucher.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -21,7 +21,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -45,8 +44,8 @@ public class VoucherService {
     }
 
     public List<String> getPurchasedVoucher(String phoneNumber) {
-        List<Order> orders = orderRepository.findByPhoneNumber(phoneNumber);
-        return orders.stream().map(Order::getVoucherCode).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
+        List<Voucher> vouchers = orderRepository.findByPhoneNumber(phoneNumber);
+        return vouchers.stream().map(Voucher::getVoucherCode).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
     }
 
     /**
@@ -56,11 +55,11 @@ public class VoucherService {
      */
     @TimeLimiter(name = "3rdService", fallbackMethod = "handleFallback")
     public CompletionStage<ResponseEntity<ResponseDto>> acquireVoucher(VoucherRequestDto requestDto) {
-        Order order = new Order();
-        order.setOrderId(requestDto.getOrderId());
-        order.setPhoneNumber(requestDto.getPhoneNo());
-        order.setOrderStatus(OrderStatus.PAYMENT_SUCCESS);
-        orderRepository.saveAndFlush(order);
+        Voucher voucher = new Voucher();
+        voucher.setOrderId(requestDto.getOrderId());
+        voucher.setPhoneNumber(requestDto.getPhoneNo());
+        voucher.setOrderStatus(OrderStatus.PAYMENT_SUCCESS);
+        orderRepository.saveAndFlush(voucher);
 
         Supplier<ResponseEntity<ResponseDto>> supplier = () -> {
             log.info("Requesting voucher from 3rd party - orderId: {}, phoneNumber: {}",
@@ -75,20 +74,20 @@ public class VoucherService {
 
             String voucherCode = resp.getVoucherCode();
             log.info("Third party responded - {}", voucherCode);
-            Optional<Order> byOrderId = orderRepository.findByOrderId(requestDto.getOrderId());
+            Optional<Voucher> byOrderId = orderRepository.findByOrderId(requestDto.getOrderId());
             if (byOrderId.isPresent()) {
-                Order order1 = byOrderId.get();
-                order1.setVoucherCode(voucherCode);
-                if (order1.getOrderStatus().equals(OrderStatus.VOUCHER_REQUESTING)) {
+                Voucher voucher1 = byOrderId.get();
+                voucher1.setVoucherCode(voucherCode);
+                if (voucher1.getOrderStatus().equals(OrderStatus.VOUCHER_REQUESTING)) {
                     voucherMessageService.sendSMSMessage(SendingMessageRequest.builder()
                             .content("Voucher code: " + voucherCode).messageId(requestDto.getOrderId())
                             .phoneNumber(requestDto.getPhoneNo()).messageType(MessageType.SMS_VOUCHER)
                             .channel(NotificationChannel.SMS)
                             .build());
                 } else {
-                    order1.setOrderStatus(OrderStatus.COMPLETED);
+                    voucher1.setOrderStatus(OrderStatus.COMPLETED);
                 }
-                orderRepository.save(order1);
+                orderRepository.save(voucher1);
             }
 
             return ResponseEntity.ok(VoucherDto.builder().message(voucherCode).build());

@@ -8,7 +8,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "voucher")
 @Data
-public class Order extends Audit {
+public class Voucher extends Audit {
 
     @Id
     @Column(name = "order_id", unique = true, nullable = false)
