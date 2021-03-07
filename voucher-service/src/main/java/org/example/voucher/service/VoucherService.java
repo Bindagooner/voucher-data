@@ -35,12 +35,16 @@ public class VoucherService {
 
     private OrderRepository orderRepository;
     private VoucherMessageService voucherMessageService;
+    private RestTemplate restTemplate;
+    private MultiValueMap<String, String> headers;
     private static final String EXTERNAL_URL = "http://localhost:7788/third-party/get-voucher";
 
     @Autowired
     public VoucherService(OrderRepository orderRepository, VoucherMessageService voucherMessageService) {
         this.orderRepository = orderRepository;
         this.voucherMessageService = voucherMessageService;
+        restTemplate = new RestTemplate();
+        headers = buildHeader();
     }
 
     public List<String> getPurchasedVoucher(String phoneNumber) {
@@ -64,9 +68,6 @@ public class VoucherService {
         Supplier<ResponseEntity<ResponseDto>> supplier = () -> {
             log.info("Requesting voucher from 3rd party - orderId: {}, phoneNumber: {}",
                     requestDto.getOrderId(), requestDto.getPhoneNo());
-
-            RestTemplate restTemplate = new RestTemplate();
-            MultiValueMap<String, String> headers = buildHeader();
 
             HttpEntity<ThirdPartyRequestDto> request = new HttpEntity<>(
                     new ThirdPartyRequestDto(requestDto.getOrderId(), requestDto.getPhoneNo()), headers);
