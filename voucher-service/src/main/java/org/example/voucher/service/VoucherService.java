@@ -14,11 +14,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Base64Utils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -96,7 +99,8 @@ public class VoucherService {
     private MultiValueMap<String, String> buildHeader() {
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
         headers.add("Content-Type", "application/json");
-        headers.add("Authorization", "Basic aaaaa");
+        headers.add("Authorization",
+                "Basic " + Base64Utils.encodeToString("user:password".getBytes(StandardCharsets.UTF_8)));
         return headers;
     }
 
