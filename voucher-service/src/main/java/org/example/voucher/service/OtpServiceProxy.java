@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @FeignClient(value = "otp-service", path = "otp-service")
 @RibbonClient(value = "otp-service")
-public interface OtpService {
+public interface OtpServiceProxy {
 
     @PostMapping(value = "request-otp", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)

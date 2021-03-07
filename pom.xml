@@ -15,6 +15,7 @@
         <module>config-service</module>
         <module>3rd-party</module>
         <module>otp-service</module>
+        <module>api-gateway</module>
     </modules>
     <packaging>pom</packaging>
 

@@ -7,7 +7,7 @@ import org.example.common.dto.OtpValidationResponse;
 import org.example.voucher.dto.ListVoucherRequestDto;
 import org.example.voucher.dto.ResponseDto;
 import org.example.voucher.dto.VoucherRequestDto;
-import org.example.voucher.service.OtpService;
+import org.example.voucher.service.OtpServiceProxy;
 import org.example.voucher.service.VoucherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -25,12 +25,12 @@ import java.util.concurrent.CompletionStage;
 public class VoucherController {
 
     private VoucherService voucherService;
-    private OtpService otpService;
+    private OtpServiceProxy otpServiceProxy;
 
     @Autowired
-    VoucherController(VoucherService voucherService, OtpService otpService) {
+    VoucherController(VoucherService voucherService, OtpServiceProxy otpServiceProxy) {
         this.voucherService = voucherService;
-        this.otpService = otpService;
+        this.otpServiceProxy = otpServiceProxy;
     }
 
     /**
@@ -49,7 +49,7 @@ public class VoucherController {
         log.info("List voucher request received");
         if (requestDto.getOtp() != null) {
             // validate OTP
-            OtpValidationResponse otpValidationResponse = otpService.validateOtp(requestDto.getOtp());
+            OtpValidationResponse otpValidationResponse = otpServiceProxy.validateOtp(requestDto.getOtp());
             if (otpValidationResponse.isValid()) {
                 List<String> vouchers = voucherService.getPurchasedVoucher(requestDto.getPhoneNo());
                 return ResponseEntity.ok(vouchers);
@@ -57,7 +57,7 @@ public class VoucherController {
 
         }
         // request OTP
-        OtpResponse otpResponse = otpService.requestOtp(OtpRequest.builder().requester("voucher-service")
+        OtpResponse otpResponse = otpServiceProxy.requestOtp(OtpRequest.builder().requester("voucher-service")
                 .phoneNumber(requestDto.getPhoneNo()).build());
         return ResponseEntity.accepted().body(otpResponse);
     }
