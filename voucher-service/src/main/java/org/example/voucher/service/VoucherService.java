@@ -8,7 +8,7 @@ import org.example.common.dto.NotificationChannel;
 import org.example.common.dto.SendingMessageRequest;
 import org.example.voucher.dto.*;
 import org.example.voucher.entity.Voucher;
-import org.example.voucher.repository.OrderRepository;
+import org.example.voucher.repository.VoucherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -33,22 +33,22 @@ import java.util.stream.Collectors;
 @Slf4j
 public class VoucherService {
 
-    private OrderRepository orderRepository;
+    private VoucherRepository voucherRepository;
     private VoucherMessageService voucherMessageService;
     private RestTemplate restTemplate;
     private MultiValueMap<String, String> headers;
-    private static final String EXTERNAL_URL = "http://localhost:7788/third-party/get-voucher";
+    protected static final String EXTERNAL_URL = "http://localhost:7788/third-party/get-voucher";
 
     @Autowired
-    public VoucherService(OrderRepository orderRepository, VoucherMessageService voucherMessageService) {
-        this.orderRepository = orderRepository;
+    public VoucherService(VoucherRepository voucherRepository, VoucherMessageService voucherMessageService) {
+        this.voucherRepository = voucherRepository;
         this.voucherMessageService = voucherMessageService;
         restTemplate = new RestTemplate();
         headers = buildHeader();
     }
 
     public List<String> getPurchasedVoucher(String phoneNumber) {
-        List<Voucher> vouchers = orderRepository.findByPhoneNumber(phoneNumber);
+        List<Voucher> vouchers = voucherRepository.findByPhoneNumber(phoneNumber);
         return vouchers.stream().map(Voucher::getVoucherCode).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
     }
 
@@ -63,7 +63,7 @@ public class VoucherService {
         voucher.setOrderId(requestDto.getOrderId());
         voucher.setPhoneNumber(requestDto.getPhoneNo());
         voucher.setOrderStatus(OrderStatus.PAYMENT_SUCCESS);
-        orderRepository.saveAndFlush(voucher);
+        voucherRepository.saveAndFlush(voucher);
 
         Supplier<ResponseEntity<ResponseDto>> supplier = () -> {
             log.info("Requesting voucher from 3rd party - orderId: {}, phoneNumber: {}",
@@ -75,7 +75,7 @@ public class VoucherService {
 
             String voucherCode = resp.getVoucherCode();
             log.info("Third party responded - {}", voucherCode);
-            Optional<Voucher> byOrderId = orderRepository.findByOrderId(requestDto.getOrderId());
+            Optional<Voucher> byOrderId = voucherRepository.findByOrderId(requestDto.getOrderId());
             if (byOrderId.isPresent()) {
                 Voucher voucher1 = byOrderId.get();
                 voucher1.setVoucherCode(voucherCode);
@@ -88,7 +88,7 @@ public class VoucherService {
                 } else {
                     voucher1.setOrderStatus(OrderStatus.COMPLETED);
                 }
-                orderRepository.save(voucher1);
+                voucherRepository.save(voucher1);
             }
 
             return ResponseEntity.ok(VoucherDto.builder().message(voucherCode).build());
@@ -96,7 +96,25 @@ public class VoucherService {
         return CompletableFuture.supplyAsync(supplier);
     }
 
-    private MultiValueMap<String, String> buildHeader() {
+    private CompletionStage<ResponseEntity<ResponseDto>> handleFallback(VoucherRequestDto requestDto, Throwable throwable) {
+        log.info("fallback is being called...");
+        log.error("Exception: ", throwable);
+        if (throwable instanceof TimeoutException) {
+            voucherRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
+                    requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUESTING));
+            return CompletableFuture.supplyAsync(() ->
+                    ResponseEntity.accepted().body(
+                            ResponseDto.builder().message("The request is being processed within 30 seconds.")
+                                    .statusCode(202).build()));
+        } else {
+            voucherRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
+                    requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUEST_FAILED));
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Something went wrong. Please retry later.", throwable);
+        }
+
+    }
+
+    protected MultiValueMap<String, String> buildHeader() {
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
         headers.add("Content-Type", "application/json");
         headers.add("Authorization",
@@ -104,20 +122,7 @@ public class VoucherService {
         return headers;
     }
 
-    private CompletionStage<ResponseEntity<ResponseDto>> handleFallback(VoucherRequestDto requestDto, Throwable throwable) {
-        log.info("fallback is being called...");
-        if (throwable instanceof TimeoutException) {
-            orderRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
-                    requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUESTING));
-            return CompletableFuture.supplyAsync(() ->
-                    ResponseEntity.accepted().body(
-                            ResponseDto.builder().message("The request is being processed within 30 seconds.")
-                                    .statusCode(202).build()));
-        } else {
-            orderRepository.save(Utilities.buildOrder(requestDto.getOrderId(), null,
-                    requestDto.getPhoneNo(), OrderStatus.VOUCHER_REQUEST_FAILED));
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Something went wrong. Please retry later.", throwable);
-        }
-
+    protected void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 }

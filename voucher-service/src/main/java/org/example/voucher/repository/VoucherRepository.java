@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface OrderRepository extends JpaRepository<Voucher, String> {
+public interface VoucherRepository extends JpaRepository<Voucher, String> {
     Optional<Voucher> findByOrderId(String orderId);
     List<Voucher> findByPhoneNumber(String phoneNumber);
     List<Voucher> findByOrderStatus(OrderStatus orderStatus);
